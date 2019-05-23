@@ -1,10 +1,10 @@
-FROM debian:jessie
+FROM debian:stretch
 
 ENV SPLUNK_PRODUCT splunk
-ENV SPLUNK_VERSION 6.5.0
-ENV SPLUNK_BUILD 59c8927def0f
+ENV SPLUNK_VERSION 7.2.6
+ENV SPLUNK_BUILD c0bf0f679ce9
 ENV SPLUNK_FILENAME splunk-${SPLUNK_VERSION}-${SPLUNK_BUILD}-Linux-x86_64.tgz
-ENV SPLUNK_APPINSPECT_VERSION 1.2.0.73
+ENV SPLUNK_APPINSPECT_VERSION 1.7.0
 
 ENV SPLUNK_HOME /opt/splunk
 ENV SPLUNK_GROUP splunk
@@ -30,7 +30,7 @@ RUN apt-get install -y git bzip2
 
 # Download official Splunk release, verify checksum and unzip in /opt/splunk
 # Also backup etc folder, so it will be later copied to the linked volume
-RUN apt-get install -y wget sudo python python-dev libxml2-dev libxslt-dev lib32z1-dev python-lxml python-pip \
+RUN apt-get install -y wget sudo python python-dev libxml2-dev libxslt-dev lib32z1-dev python-lxml python-pip procps \
     && mkdir -p ${SPLUNK_HOME} \
     && wget -qO /tmp/${SPLUNK_FILENAME} https://download.splunk.com/products/${SPLUNK_PRODUCT}/releases/${SPLUNK_VERSION}/linux/${SPLUNK_FILENAME} \
     && wget -qO /tmp/${SPLUNK_FILENAME}.md5 https://download.splunk.com/products/${SPLUNK_PRODUCT}/releases/${SPLUNK_VERSION}/linux/${SPLUNK_FILENAME}.md5 \
@@ -38,7 +38,7 @@ RUN apt-get install -y wget sudo python python-dev libxml2-dev libxslt-dev lib32
     && tar xzf /tmp/${SPLUNK_FILENAME} --strip 1 -C ${SPLUNK_HOME} \
     && rm /tmp/${SPLUNK_FILENAME} \
     && rm /tmp/${SPLUNK_FILENAME}.md5 \
-    && pip install http://download.splunk.com/misc/appinspect/splunk-appinspect-${SPLUNK_APPINSPECT_VERSION}.tar.gz \
+    && pip install http://dev.splunk.com/goto/appinspectdownload \
     && apt-get purge -y --auto-remove wget python-dev libxml2-dev libxslt-dev lib32z1-dev \
     && mkdir -p /var/opt/splunk \
     && cp -R ${SPLUNK_HOME}/etc ${SPLUNK_BACKUP_DEFAULT_ETC} \
@@ -47,7 +47,7 @@ RUN apt-get install -y wget sudo python python-dev libxml2-dev libxslt-dev lib32
     && chown -R ${SPLUNK_USER}:${SPLUNK_GROUP} ${SPLUNK_BACKUP_DEFAULT_ETC} \
     && rm -rf /var/lib/apt/lists/*
 
-COPY entrypoint.sh /sbin/entrypoint.sh
+COPY build/entrypoint.sh /sbin/entrypoint.sh
 RUN chmod +x /sbin/entrypoint.sh
 
 # Copy new license
